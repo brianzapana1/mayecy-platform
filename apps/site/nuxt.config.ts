@@ -10,8 +10,7 @@ export default defineNuxtConfig({
     }
   ],
   modules: [
-    'nuxt-site-config',
-    '@nuxtjs/sitemap'
+    'nuxt-site-config'
   ],
   css: [
     '~/assets/css/variables.css',
@@ -24,11 +23,11 @@ export default defineNuxtConfig({
     name: 'Mayecy'
   },
 
-  sitemap: {
-    sources: [
-      '/api/__sitemap__/products'
-    ]
-  },
+  // sitemap: {
+  //   sources: [
+  //     '/api/__sitemap__/products'
+  //   ]
+  // },
 
   runtimeConfig: {
     public: {
