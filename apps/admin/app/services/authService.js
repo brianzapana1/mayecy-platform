@@ -1,7 +1,16 @@
 import { getSupabaseClient } from '~/utils/supabaseClient'
+import { logSecurityEvent } from '~/services/adminSecurityService'
 
 const ADMIN_SESSION_KEY = 'mayecy_admin_session_started_at'
-const ADMIN_SESSION_MAX_AGE = 60 * 60 * 1000 // 1 hora
+const ADMIN_SESSION_MAX_AGE = 60 * 60 * 1000
+
+const ADMIN_PROFILE_SELECT = `
+  id,
+  email,
+  full_name,
+  role,
+  is_active
+`
 
 const saveAdminSessionStart = () => {
   if (!import.meta.client) return
@@ -23,14 +32,6 @@ const isAdminSessionExpired = () => {
   return Date.now() - startedAt > ADMIN_SESSION_MAX_AGE
 }
 
-const ADMIN_PROFILE_SELECT = `
-  id,
-  email,
-  full_name,
-  role,
-  is_active
-`
-
 export const signInAdmin = async ({ email, password }) => {
   const supabase = getSupabaseClient()
 
@@ -40,6 +41,14 @@ export const signInAdmin = async ({ email, password }) => {
   })
 
   if (error) {
+    await logSecurityEvent({
+      eventType: 'login_failed',
+      actorEmail: email,
+      details: {
+        reason: 'invalid_credentials'
+      }
+    })
+
     throw new Error('Correo o contraseña incorrectos.')
   }
 
@@ -51,17 +60,36 @@ export const signInAdmin = async ({ email, password }) => {
     .eq('id', user.id)
     .maybeSingle()
 
+  const isValidRole = ['global_admin', 'admin'].includes(profile?.role)
+
   if (
     profileError ||
     !profile ||
     !profile.is_active ||
-    !['global_admin', 'admin'].includes(profile.role)
+    !isValidRole
   ) {
+    await logSecurityEvent({
+      eventType: 'access_denied',
+      actorEmail: user.email,
+      actorRole: profile?.role || null,
+      details: {
+        reason: 'not_admin_or_inactive'
+      }
+    })
+
     await supabase.auth.signOut()
+    clearAdminSessionStart()
+
     throw new Error('Este usuario no tiene permisos de administrador.')
   }
 
   saveAdminSessionStart()
+
+  await logSecurityEvent({
+    eventType: 'login_success',
+    actorEmail: profile.email,
+    actorRole: profile.role
+  })
 
   return {
     user,
@@ -72,11 +100,19 @@ export const signInAdmin = async ({ email, password }) => {
 export const getCurrentAdmin = async () => {
   const supabase = getSupabaseClient()
 
-    if (isAdminSessionExpired()) {
-      await supabase.auth.signOut()
-      clearAdminSessionStart()
-      return null
-    }
+  if (isAdminSessionExpired()) {
+    await logSecurityEvent({
+      eventType: 'session_expired',
+      details: {
+        maxAgeMinutes: 60
+      }
+    })
+
+    await supabase.auth.signOut()
+    clearAdminSessionStart()
+
+    return null
+  }
 
   const { data: userData, error: userError } = await supabase.auth.getUser()
 
@@ -90,11 +126,13 @@ export const getCurrentAdmin = async () => {
     .eq('id', userData.user.id)
     .maybeSingle()
 
+  const isValidRole = ['global_admin', 'admin'].includes(profile?.role)
+
   if (
     profileError ||
     !profile ||
     !profile.is_active ||
-    !['global_admin', 'admin'].includes(profile.role)
+    !isValidRole
   ) {
     return null
   }
@@ -107,8 +145,20 @@ export const getCurrentAdmin = async () => {
 
 export const signOutAdmin = async () => {
   const supabase = getSupabaseClient()
+  const admin = await getCurrentAdmin()
 
-  const { error } = await supabase.auth.signOut()
+  if (admin) {
+    await logSecurityEvent({
+      eventType: 'logout',
+      actorEmail: admin.profile.email,
+      actorRole: admin.profile.role
+    })
+  }
+
+  const { error } = await supabase.auth.signOut({
+    scope: 'global'
+  })
+
   clearAdminSessionStart()
 
   if (error) {
