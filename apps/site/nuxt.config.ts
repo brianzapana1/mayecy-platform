@@ -1,6 +1,8 @@
 export default defineNuxtConfig({
   compatibilityDate: '2026-07-06',
-
+  nitro: {
+    preset: 'cloudflare_pages'
+  },
   components: [
     {
       path: '~/components',
