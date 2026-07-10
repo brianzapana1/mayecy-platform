@@ -1,0 +1,16 @@
+{
+  "name": "mayecy-platform",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev:site": "pnpm --dir apps/site dev",
+    "dev:site:lan": "pnpm --dir apps/site dev --host 0.0.0.0 --port 3000 --qr",
+    "build:site": "pnpm --dir apps/site build",
+    "generate:site": "pnpm --dir apps/site generate",
+
+    "dev:admin": "pnpm --dir apps/admin dev --port 3001",
+    "dev:admin:lan": "pnpm --dir apps/admin dev --host 0.0.0.0 --port 3001 --qr",
+    "build:admin": "pnpm --dir apps/admin build",
+    "generate:admin": "pnpm --dir apps/admin generate"
+  }
+}

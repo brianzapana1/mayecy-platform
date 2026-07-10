@@ -1,0 +1,25 @@
+:root {
+  --pink-bg: #f8cbd9;
+  --pink-bg-soft: #fde8f0;
+  --pink-main: #f20786;
+  --pink-main-dark: #c50068;
+  --pink-main-soft: #ffe0ee;
+
+  --cyan-main: #45c8ef;
+  --cyan-dark: #1296bd;
+  --yellow-main: #ffe248;
+
+  --green-old: #50c96b;
+
+  --ink: #5c5f73;
+  --ink-dark: #2b2430;
+  --muted: #7f6b78;
+
+  --white: #ffffff;
+  --border-pink: rgba(242, 7, 134, 0.2);
+
+  --shadow-soft: 0 18px 40px rgba(197, 0, 104, 0.12);
+  --shadow-nav: 0 10px 24px rgba(197, 0, 104, 0.1);
+
+  --container: 1120px;
+}
