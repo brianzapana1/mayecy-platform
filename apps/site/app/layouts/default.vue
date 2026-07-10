@@ -12,6 +12,7 @@ import FloatingWhatsApp from '~/components/layout/FloatingWhatsApp.vue'
       <slot />
     </main>
 
+    
     <SiteFooter />
 
     <FloatingWhatsApp />
