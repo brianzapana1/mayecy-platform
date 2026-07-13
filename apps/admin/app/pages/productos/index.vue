@@ -3,7 +3,8 @@ import {
   getAdminProducts,
   createAdminProduct,
   updateAdminProduct,
-  deleteAdminProduct
+  deleteAdminProduct,
+  getAdminProductById
 } from '~/services/adminProductService'
 import { getAdminCategories } from '~/services/adminCategoryService'
 import { uploadProductImage } from '~/services/adminStorageService'
@@ -21,6 +22,7 @@ const products = ref([])
 const categories = ref([])
 const loading = ref(true)
 const saving = ref(false)
+const savingStage = ref('')
 const deletingId = ref(null)
 const deleteModal = ref({
   open: false,
@@ -45,6 +47,30 @@ const existingImages = ref([])
 const selectedImages = ref([])
 
 const maxProductImages = 5
+
+
+const getOrderedProductImages = (product) => {
+  return [...(product?.product_images || [])].sort((a, b) => {
+    if (a.is_primary && !b.is_primary) return -1
+    if (!a.is_primary && b.is_primary) return 1
+
+    return Number(a.sort_order || 0) - Number(b.sort_order || 0)
+  })
+}
+
+const getProductMainImage = (product) => {
+  const images = getOrderedProductImages(product)
+
+  return (
+    images[0]?.image_url ||
+    product?.imagen_url ||
+    ''
+  )
+}
+
+const hasProductImage = (product) => {
+  return Boolean(getProductMainImage(product))
+}
 
 const sortedImages = (images) => {
   return [...(images || [])].sort((a, b) => {
@@ -111,6 +137,19 @@ const removeNewImage = (index) => {
   })
 }
 
+const replaceProductInList = (updatedProduct) => {
+  const index = products.value.findIndex((product) => {
+    return product.id_producto === updatedProduct.id_producto
+  })
+
+  if (index >= 0) {
+    products.value.splice(index, 1, updatedProduct)
+    return
+  }
+
+  products.value.unshift(updatedProduct)
+}
+
 const removeExistingImage = async (image) => {
   const confirmed = window.confirm('¿Eliminar esta imagen del producto?')
 
@@ -132,15 +171,24 @@ const uploadSelectedImagesForProduct = async (product) => {
   if (!selectedImages.value.length) return []
 
   const uploaded = []
+  const total = selectedImages.value.length
 
-  for (const [index, file] of selectedImages.value.entries()) {
+  for (const [index, selectedItem] of selectedImages.value.entries()) {
+    const file = selectedItem?.file || selectedItem
+
+    savingStage.value =
+      `Subiendo imagen ${index + 1} de ${total}...`
+
     const uploadedImage = await uploadProductImage(
       file,
       product.nombre,
       product.id_producto
     )
 
-    const sortOrder = existingImages.value.length + index + 1
+    const sortOrder =
+      existingImages.value.length +
+      index +
+      1
 
     const savedImage = await createAdminProductImage({
       id_producto: product.id_producto,
@@ -148,7 +196,9 @@ const uploadSelectedImagesForProduct = async (product) => {
       storage_path: uploadedImage.storagePath,
       alt_text: product.nombre,
       sort_order: sortOrder,
-      is_primary: existingImages.value.length === 0 && index === 0
+      is_primary:
+        existingImages.value.length === 0 &&
+        index === 0
     })
 
     uploaded.push(savedImage)
@@ -317,7 +367,9 @@ const showError = (message) => {
 const stats = computed(() => {
   const total = products.value.length
   const visible = products.value.filter((product) => product.visible_web).length
-  const noImage = products.value.filter((product) => !product.imagen_url).length
+  const noImage = products.value.filter((product) => {
+    return !hasProductImage(product)
+  }).length
   const destacados = products.value.filter((product) => product.destacado).length
 
   return {
@@ -382,7 +434,9 @@ const openEditModal = (product) => {
 
 }
 
-const closeModal = () => {
+const closeModal = (force = false) => {
+  if (saving.value && !force) return
+
   isModalOpen.value = false
   editingProduct.value = null
   selectedImage.value = null
@@ -404,12 +458,17 @@ const autoGenerateSlug = () => {
 }
 
 const saveProduct = async () => {
+  if (saving.value) return
+
   errorMessage.value = ''
   successMessage.value = ''
   saving.value = true
+  savingStage.value = 'Guardando información del producto...'
 
   try {
-    const payload = { ...form.value }
+    const payload = {
+      ...form.value
+    }
 
     if (!payload.slug) {
       payload.slug = editingProduct.value
@@ -417,31 +476,51 @@ const saveProduct = async () => {
         : generateProductSlug(payload.nombre)
     }
 
-    if (selectedImage.value) {
-      payload.imagen_url = await uploadProductImage(
-        selectedImage.value,
-        payload.nombre
-      )
-    }
-
     let savedProduct = null
 
     if (editingProduct.value) {
-    savedProduct = await updateAdminProduct(editingProduct.value.id_producto, payload)
-    await uploadSelectedImagesForProduct(savedProduct)
-    showSuccess('Producto actualizado correctamente.')
+      savedProduct = await updateAdminProduct(
+        editingProduct.value.id_producto,
+        payload
+      )
     } else {
-    savedProduct = await createAdminProduct(payload)
-    await uploadSelectedImagesForProduct(savedProduct)
-    showSuccess('Producto creado correctamente.')
+      savedProduct = await createAdminProduct(payload)
     }
 
-    closeModal()
-    await loadData()
+    if (selectedImages.value.length) {
+      savingStage.value =
+        selectedImages.value.length === 1
+          ? 'Subiendo imagen...'
+          : `Subiendo ${selectedImages.value.length} imágenes...`
+
+      await uploadSelectedImagesForProduct(savedProduct)
+    }
+
+    savingStage.value = 'Actualizando la vista...'
+
+    const refreshedProduct = await getAdminProductById(
+      savedProduct.id_producto
+    )
+
+    replaceProductInList(refreshedProduct)
+
+    const successText = editingProduct.value
+      ? 'Producto actualizado correctamente.'
+      : 'Producto creado correctamente.'
+
+    showSuccess(successText)
+
+    closeModal(true)
   } catch (error) {
-    showError(error.message || 'No se pudo guardar el producto.')  
-    } finally {
+    console.error('Error al guardar producto:', error)
+
+    showError(
+      error.message ||
+      'No se pudo guardar el producto.'
+    )
+  } finally {
     saving.value = false
+    savingStage.value = ''
   }
 }
 
@@ -721,10 +800,12 @@ useSeoMeta({
         >
           <div class="admin-product-image">
             <img
-              v-if="product.imagen_url"
-              :src="product.imagen_url"
+              v-if="getProductMainImage(product)"
+              :src="getProductMainImage(product)"
               :alt="product.nombre"
+              loading="lazy"
             >
+
             <span v-else>
               {{ product.nombre?.slice(0, 2) || 'P' }}
             </span>
@@ -834,10 +915,10 @@ useSeoMeta({
     </div>
 
     <div
-      v-if="isModalOpen"
-      class="admin-modal-backdrop"
-      @click.self="closeModal"
-    >
+        v-if="isModalOpen"
+        class="admin-modal-backdrop"
+        @click.self="closeModal()"
+      >
       <section class="admin-product-modal">
         <div class="admin-modal-header">
           <div>
@@ -852,7 +933,8 @@ useSeoMeta({
           <button
             type="button"
             class="admin-modal-close"
-            @click="closeModal"
+            :disabled="saving"
+            @click="closeModal()"
           >
             ×
           </button>
@@ -964,7 +1046,7 @@ useSeoMeta({
             >
             <input
                 type="file"
-                accept="image/png,image/jpeg,image/webp"
+                accept=".jpg,.jpeg,.png,.webp,.avif,image/jpeg,image/png,image/webp,image/avif"
                 multiple
                 @change="handleImagesChange"
             >
@@ -977,15 +1059,6 @@ useSeoMeta({
             Puedes cargar hasta 5 imágenes por producto. Al pasar el mouse por una imagen aparece el botón para eliminarla.
         </small>
         </div>
-
-          <label class="admin-form-field admin-form-field-wide">
-            URL de imagen actual
-            <input
-              v-model="form.imagen_url"
-              type="url"
-              placeholder="Se llenará al subir imagen"
-            >
-          </label>
 
           <label class="admin-form-field admin-form-field-wide">
             Descripción
@@ -1060,7 +1133,8 @@ useSeoMeta({
             <button
               type="button"
               class="admin-button admin-button-secondary"
-              @click="closeModal"
+              :disabled="saving"
+              @click="closeModal()"
             >
               Cancelar
             </button>
@@ -1070,7 +1144,7 @@ useSeoMeta({
               class="admin-button admin-button-primary"
               :disabled="saving"
             >
-              {{ saving ? 'Guardando...' : 'Guardar producto' }}
+              {{ saving ? savingStage || 'Guardando...' : 'Guardar producto' }}
             </button>
           </div>
         </form>
@@ -1081,7 +1155,7 @@ useSeoMeta({
   <div
   v-if="deleteModal.open"
   class="admin-modal-backdrop"
-  @click.self="closeDeleteModal"
+  @click.self="closeDeleteModal()"
 >
   <section class="admin-delete-modal">
     <div class="admin-delete-icon">
@@ -1103,10 +1177,10 @@ useSeoMeta({
     <div class="admin-delete-product-preview">
       <div class="admin-product-image">
         <img
-          v-if="deleteModal.product?.imagen_url"
-          :src="deleteModal.product.imagen_url"
-          :alt="deleteModal.product.nombre"
-        >
+            v-if="getProductMainImage(deleteModal.product)"
+            :src="getProductMainImage(deleteModal.product)"
+            :alt="deleteModal.product?.nombre"
+          >
         <span v-else>
           {{ deleteModal.product?.nombre?.slice(0, 2) || 'P' }}
         </span>
@@ -1123,7 +1197,7 @@ useSeoMeta({
         type="button"
         class="admin-button admin-button-secondary"
         :disabled="Boolean(deletingId)"
-        @click="closeDeleteModal"
+        @click="closeDeleteModal()"
       >
         Cancelar
       </button>

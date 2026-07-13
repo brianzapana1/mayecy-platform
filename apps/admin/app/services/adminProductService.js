@@ -33,6 +33,24 @@ const PRODUCT_SELECT = `
   )
 `
 
+
+export const getAdminProductById = async (id) => {
+  const supabase = getSupabaseClient()
+
+  const { data, error } = await supabase
+    .from('productos')
+    .select(PRODUCT_SELECT)
+    .eq('id_producto', id)
+    .single()
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return data
+}
+
+
 export const getAdminProducts = async () => {
   const supabase = getSupabaseClient()
 
