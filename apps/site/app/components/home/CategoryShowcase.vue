@@ -8,14 +8,17 @@ const categories = homeContent.categories
   <section class="category-section">
     <div class="container">
       <div class="section-heading">
-        <span class="home-eyebrow">Categorías principales</span>
+        <span class="home-eyebrow">
+          Categorías principales
+        </span>
 
         <h2 class="section-title">
           Productos y materiales para su oficina
         </h2>
 
         <p class="section-description">
-          Además de insumos para impresión, atendemos pedidos de material de escritorio y limpieza.
+          Encuentra insumos para impresión, papel para plotter, rollos térmicos,
+          papelería y productos para el trabajo diario de tu oficina.
         </p>
       </div>
 
@@ -36,8 +39,13 @@ const categories = homeContent.categories
             >
           </div>
 
-          <h3>{{ category.name }}</h3>
-          <p>{{ category.description }}</p>
+          <h3>
+            {{ category.name }}
+          </h3>
+
+          <p>
+            {{ category.description }}
+          </p>
         </article>
       </div>
     </div>

@@ -2,7 +2,7 @@
 useSeoMeta({
   title: 'Contacto | Mayecy',
   description:
-  'Contacta a Mayecy para consultar insumos, tóners, tintas, recargas, papel para plotter y productos para impresoras y fotocopiadoras en La Paz, Bolivia.'
+  'Contacta a Mayecy para consultar insumos, tóners, tintas, recargas, papel para plotter, rollos térmicos y productos para impresoras y fotocopiadoras en La Paz, Bolivia.'
 })
 
 const whatsappNumber = '59171930704'
@@ -13,35 +13,34 @@ const whatsappMessage = encodeURIComponent(
 
 const contactCards = [
   {
+    type: 'whatsapp',
     title: 'WhatsApp',
     value: '+591 71930704',
-    description: 'Escríbanos para consultar productos, disponibilidad y ofertas.',
+    description:
+      'Escríbanos para consultar productos, disponibilidad y ofertas.',
     image: '/images/contact/whatsapp.png',
     href: `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`,
     action: 'Escríbanos'
   },
   {
+    type: 'email',
     title: 'Correo',
     value: 'angelicapariguana@hotmail.com',
-    description: 'También puede enviarnos sus consultas por correo electrónico.',
+    description:
+      'También puede enviarnos sus consultas por correo electrónico.',
     image: '/images/contact/email.png',
     href: 'mailto:angelicapariguana@hotmail.com',
     action: 'Enviar correo'
   },
   {
-    title: 'Teléfono',
-    value: '(2) 2313865',
-    description: 'Comuníquese con nosotros para atención directa.',
-    image: '/images/contact/phone.png',
-    href: 'tel:+59122313865',
-    action: 'Llamar'
-  },
-  {
+    type: 'store',
     title: 'Mayecy Insumos',
     value: 'Atención en La Paz',
-    description: 'Venta de insumos para impresoras, fotocopiadoras, papel para plotter y material de oficina.',
+    description:
+      'Venta de insumos para impresoras, fotocopiadoras, papel para plotter, rollos térmicos y material de oficina.',
     image: '/images/contact/store.png',
-    href: 'https://wa.me/59171930704?text=Hola%20Mayecy%2C%20quiero%20informaci%C3%B3n%20sobre%20su%20tienda.',
+    href:
+      'https://wa.me/59171930704?text=Hola%20Mayecy%2C%20quiero%20informaci%C3%B3n%20sobre%20su%20tienda.',
     action: 'Consultar'
   }
 ]
@@ -72,7 +71,7 @@ const mapsExternalUrl = `https://www.google.com/maps/search/?api=1&query=${mapsQ
           </h1>
 
           <p class="contact-intro">
-            Consulte sin compromiso sobre tóners, tintas, cintas, recargas, papel para plotter, repuestos e insumos para impresoras y fotocopiadoras.
+            Consulte sin compromiso sobre tóners, tintas, cintas, recargas, papel para plotter, rollos térmicos, repuestos e insumos para impresoras y fotocopiadoras.
           </p>
         </div>
 
@@ -83,7 +82,7 @@ const mapsExternalUrl = `https://www.google.com/maps/search/?api=1&query=${mapsQ
             class="contact-logo"
           >
 
-          <p>Atención directa por WhatsApp, teléfono y correo.</p>
+          <p>Atención directa por WhatsApp y correo.</p>
         </div>
       </div>
 
@@ -104,7 +103,20 @@ const mapsExternalUrl = `https://www.google.com/maps/search/?api=1&query=${mapsQ
 
           <div class="contact-card-content">
             <span>{{ card.title }}</span>
-            <h2>{{ card.value }}</h2>
+            <a
+                v-if="card.type === 'email'"
+                class="contact-card-email"
+                :href="card.href"
+              >
+                {{ card.value }}
+              </a>
+
+              <h2
+                v-else
+                class="contact-card-value"
+              >
+                {{ card.value }}
+              </h2>
             <p>{{ card.description }}</p>
 
             <a

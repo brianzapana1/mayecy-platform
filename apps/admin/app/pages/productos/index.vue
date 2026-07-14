@@ -31,6 +31,34 @@ const deleteModal = ref({
 const errorMessage = ref('')
 const successMessage = ref('')
 
+const modalNotice = ref({
+  type: '',
+  text: ''
+})
+const imageNotice = ref({
+  type: '',
+  text: ''
+})
+const deletingImage = ref(false)
+
+const imageDeleteConfirmRef = ref(null)
+
+const imageDeleteConfirm = ref({
+  open: false,
+  type: '',
+  image: null,
+  selectedImageId: '',
+  url: ''
+})
+
+const imageManagerLocked = computed(() => {
+  return (
+    saving.value ||
+    deletingImage.value ||
+    imageDeleteConfirm.value.open
+  )
+})
+
 const searchTerm = ref('')
 const selectedCategory = ref('')
 const selectedVisibility = ref('')
@@ -40,6 +68,10 @@ const currentPage = ref(1)
 const productsPerPage = 15
 let messageTimer = null
 
+let modalNoticeTimer = null
+
+let imageNoticeTimer = null
+
 const isModalOpen = ref(false)
 const editingProduct = ref(null)
 const selectedImage = ref(null)
@@ -47,6 +79,17 @@ const existingImages = ref([])
 const selectedImages = ref([])
 
 const maxProductImages = 5
+const maxImageSizeBytes = 5 * 1024 * 1024
+
+const allowedImageTypes = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp'
+])
+
+const isDraggingImages = ref(false)
+
+let imageDragDepth = 0
 
 
 const getOrderedProductImages = (product) => {
@@ -96,46 +139,246 @@ const previewImages = computed(() => {
     image
   }))
 
-  const news = selectedImages.value.map((file, index) => ({
+  const news = selectedImages.value.map((item, index) => ({
     type: 'new',
-    id: `new-${index}`,
-    url: URL.createObjectURL(file),
-    file,
+    id: item.id,
+    url: item.previewUrl,
+    file: item.file,
     index
   }))
 
   return [...existing, ...news]
 })
 
-const handleImagesChange = (event) => {
-  const files = Array.from(event.target.files || [])
-  const availableSlots = maxProductImages - totalImageCount.value
+const getSelectedImageSignature = (file) => {
+  return [
+    file.name,
+    file.size,
+    file.lastModified
+  ].join('-')
+}
 
-  if (availableSlots <= 0) {
-    showError('Solo puedes tener hasta 5 imágenes por producto.')
-    event.target.value = ''
+const releaseSelectedImagePreview = (item) => {
+  if (
+    item?.previewUrl &&
+    typeof URL !== 'undefined'
+  ) {
+    URL.revokeObjectURL(item.previewUrl)
+  }
+}
+
+const clearSelectedImages = () => {
+  selectedImages.value.forEach((item) => {
+    releaseSelectedImagePreview(item)
+  })
+
+  selectedImages.value = []
+}
+
+const resetImageDragState = () => {
+  imageDragDepth = 0
+  isDraggingImages.value = false
+}
+
+const addImageFiles = (filesLike) => {
+  if (imageManagerLocked.value) {
     return
   }
 
-  const filesToAdd = files.slice(0, availableSlots)
+  clearImageNotice()
 
-  selectedImages.value = [
-    ...selectedImages.value,
-    ...filesToAdd
-  ]
+  const files = Array.from(filesLike || [])
 
-  if (files.length > availableSlots) {
-    showError(`Solo se agregaron ${availableSlots} imagen(es). El máximo es 5.`)
+  if (!files.length) {
+    showImageError(
+      'No se detectaron archivos para agregar.'
+    )
+    return
   }
 
+  const availableSlots =
+    maxProductImages - totalImageCount.value
+
+  if (availableSlots <= 0) {
+    showImageError(
+      'Ya alcanzaste el máximo de 5 imágenes por producto.'
+    )
+    return
+  }
+
+  const selectedSignatures = new Set(
+    selectedImages.value.map((item) => item.signature)
+  )
+
+  const acceptedItems = []
+
+  let invalidTypeCount = 0
+  let tooLargeCount = 0
+  let duplicatedCount = 0
+  let overLimitCount = 0
+
+  for (const file of files) {
+    if (!allowedImageTypes.has(file.type)) {
+      invalidTypeCount += 1
+      continue
+    }
+
+    if (file.size > maxImageSizeBytes) {
+      tooLargeCount += 1
+      continue
+    }
+
+    const signature =
+      getSelectedImageSignature(file)
+
+    if (selectedSignatures.has(signature)) {
+      duplicatedCount += 1
+      continue
+    }
+
+    if (acceptedItems.length >= availableSlots) {
+      overLimitCount += 1
+      continue
+    }
+
+    selectedSignatures.add(signature)
+
+    acceptedItems.push({
+      id: `new-${signature}`,
+      file,
+      signature,
+      previewUrl: URL.createObjectURL(file)
+    })
+  }
+
+  if (acceptedItems.length) {
+    selectedImages.value = [
+      ...selectedImages.value,
+      ...acceptedItems
+    ]
+  }
+
+  const messages = []
+
+  if (invalidTypeCount) {
+    messages.push(
+      invalidTypeCount === 1
+        ? '1 archivo no tiene un formato permitido. Solo se permiten imágenes JPEG, PNG y WEBP.'
+        : `${invalidTypeCount} archivos no tienen un formato permitido. Solo se permiten imágenes JPEG, PNG y WEBP.`
+    )
+  }
+
+  if (tooLargeCount) {
+    messages.push(
+      tooLargeCount === 1
+        ? '1 imagen supera el tamaño máximo de 5 MB.'
+        : `${tooLargeCount} imágenes superan el tamaño máximo de 5 MB.`
+    )
+  }
+
+  if (duplicatedCount) {
+    messages.push(
+      duplicatedCount === 1
+        ? '1 imagen ya estaba seleccionada y no se volvió a agregar.'
+        : `${duplicatedCount} imágenes ya estaban seleccionadas y no se volvieron a agregar.`
+    )
+  }
+
+  if (overLimitCount) {
+    messages.push(
+      overLimitCount === 1
+        ? '1 imagen no se agregó porque el máximo permitido es de 5 imágenes.'
+        : `${overLimitCount} imágenes no se agregaron porque el máximo permitido es de 5 imágenes.`
+    )
+  }
+
+  if (messages.length) {
+    const acceptedText =
+      acceptedItems.length === 1
+        ? 'Se agregó 1 imagen correctamente. '
+        : acceptedItems.length > 1
+          ? `Se agregaron ${acceptedItems.length} imágenes correctamente. `
+          : ''
+
+    showImageError(
+      acceptedText + messages.join(' ')
+    )
+
+    return
+  }
+
+  if (acceptedItems.length === 1) {
+    showImageSuccess(
+      'La imagen fue agregada correctamente.'
+    )
+  } else if (acceptedItems.length > 1) {
+    showImageSuccess(
+      `Las ${acceptedItems.length} imágenes fueron agregadas correctamente.`
+    )
+  }
+}
+
+const handleImagesChange = (event) => {
+  addImageFiles(event.target.files)
   event.target.value = ''
 }
 
-const removeNewImage = (index) => {
-  selectedImages.value = selectedImages.value.filter((_, itemIndex) => {
-    return itemIndex !== index
-  })
+const handleImageDragEnter = () => {
+  if (
+    !canAddImages.value ||
+    imageManagerLocked.value
+  ) {
+    return
+  }
+
+  imageDragDepth += 1
+  isDraggingImages.value = true
 }
+
+const handleImageDragOver = (event) => {
+  if (!event.dataTransfer) {
+    return
+  }
+
+  event.dataTransfer.dropEffect =
+    canAddImages.value &&
+    !imageManagerLocked.value
+      ? 'copy'
+      : 'none'
+}
+
+const handleImageDragLeave = () => {
+  imageDragDepth = Math.max(0, imageDragDepth - 1)
+
+  if (imageDragDepth === 0) {
+    isDraggingImages.value = false
+  }
+}
+
+const handleImagesDrop = (event) => {
+  resetImageDragState()
+
+  if (
+    !canAddImages.value ||
+    imageManagerLocked.value
+  ) {
+    return
+  }
+
+  const files =
+    event.dataTransfer?.files
+
+  if (!files?.length) {
+    showImageError(
+      'No se detectaron archivos para agregar.'
+    )
+    return
+  }
+
+  addImageFiles(files)
+}
+
+
 
 const replaceProductInList = (updatedProduct) => {
   const index = products.value.findIndex((product) => {
@@ -150,20 +393,184 @@ const replaceProductInList = (updatedProduct) => {
   products.value.unshift(updatedProduct)
 }
 
-const removeExistingImage = async (image) => {
-  const confirmed = window.confirm('¿Eliminar esta imagen del producto?')
+const removeNewImageById = (selectedImageId) => {
+  const imageIndex = selectedImages.value.findIndex(
+    (item, itemIndex) => {
+      const currentId =
+        item?.id ||
+        `new-${itemIndex}`
 
-  if (!confirmed) return
+      return currentId === selectedImageId
+    }
+  )
+
+  if (imageIndex < 0) {
+    return false
+  }
+
+  const imageToRemove =
+    selectedImages.value[imageIndex]
+
+  releaseSelectedImagePreview(imageToRemove)
+
+  selectedImages.value =
+    selectedImages.value.filter(
+      (_, itemIndex) => itemIndex !== imageIndex
+    )
+
+  return true
+}
+
+const requestImageRemoval = async (preview) => {
+  if (saving.value || deletingImage.value) {
+    return
+  }
+
+  clearImageNotice()
+
+  imageDeleteConfirm.value = {
+    open: true,
+    type: preview.type,
+    image:
+      preview.type === 'existing'
+        ? preview.image
+        : null,
+    selectedImageId:
+      preview.type === 'new'
+        ? preview.id
+        : '',
+    url: preview.url
+  }
+
+  await nextTick()
+
+  imageDeleteConfirmRef.value?.focus()
+}
+
+const cancelImageRemoval = () => {
+  if (deletingImage.value) {
+    return
+  }
+
+  resetImageDeleteConfirmation()
+}
+
+const confirmImageRemoval = async () => {
+  const pendingDelete = {
+    ...imageDeleteConfirm.value
+  }
+
+  if (
+    !pendingDelete.open ||
+    deletingImage.value
+  ) {
+    return
+  }
+
+  /*
+   * Una imagen nueva todavía no está en Supabase.
+   * Solo se retira de la selección local.
+   */
+  if (pendingDelete.type === 'new') {
+    const removed = removeNewImageById(
+      pendingDelete.selectedImageId
+    )
+
+    resetImageDeleteConfirmation()
+
+    if (removed) {
+      showImageSuccess(
+      'La imagen se quitó de la selección. No se había subido todavía.'
+    )
+    }
+
+    return
+  }
+
+  if (!pendingDelete.image) {
+    resetImageDeleteConfirmation()
+    return
+  }
+
+  deletingImage.value = true
+  clearModalNotice()
 
   try {
-    await deleteAdminProductImage(image)
-    existingImages.value = existingImages.value.filter((item) => {
-      return item.id_product_image !== image.id_product_image
-    })
-    showSuccess('Imagen eliminada correctamente.')
-    await loadData()
+    await deleteAdminProductImage(
+      pendingDelete.image
+    )
+
+    existingImages.value =
+      existingImages.value.filter((image) => {
+        return (
+          image.id_product_image !==
+          pendingDelete.image.id_product_image
+        )
+      })
+
+    const productId =
+      editingProduct.value?.id_producto
+
+    if (productId) {
+      try {
+        const refreshedProduct =
+          await getAdminProductById(productId)
+
+        editingProduct.value =
+          refreshedProduct
+
+        existingImages.value =
+          sortedImages(
+            refreshedProduct.product_images || []
+          )
+
+        replaceProductInList(
+          refreshedProduct
+        )
+      } catch (refreshError) {
+        /*
+         * La eliminación ya fue realizada.
+         * Si falla únicamente la actualización visual,
+         * conservamos localmente la información correcta.
+         */
+        const fallbackProduct = {
+          ...editingProduct.value,
+          product_images: [
+            ...existingImages.value
+          ]
+        }
+
+        editingProduct.value =
+          fallbackProduct
+
+        replaceProductInList(
+          fallbackProduct
+        )
+
+        console.warn(
+          'La imagen se eliminó, pero no se pudo refrescar el producto:',
+          refreshError
+        )
+      }
+    }
+
+    resetImageDeleteConfirmation()
+
+    showImageSuccess(
+      'La imagen fue eliminada correctamente del producto.'
+    )
   } catch (error) {
-    showError(error.message || 'No se pudo eliminar la imagen.')
+    console.error(
+      'Error al eliminar imagen:',
+      error
+    )
+
+    showImageError(
+      error.message ||
+      'No se pudo eliminar la imagen. Intenta nuevamente.'
+    )
+  } finally {
+    deletingImage.value = false
   }
 }
 
@@ -364,6 +771,101 @@ const showError = (message) => {
   }, 5000)
 }
 
+const clearModalNotice = () => {
+  if (modalNoticeTimer) {
+    clearTimeout(modalNoticeTimer)
+    modalNoticeTimer = null
+  }
+
+  modalNotice.value = {
+    type: '',
+    text: ''
+  }
+}
+
+const showModalNotice = (type, text) => {
+  clearModalNotice()
+
+  modalNotice.value = {
+    type,
+    text
+  }
+
+  // Los errores permanecen hasta que el usuario los cierre.
+  // Los mensajes positivos desaparecen automáticamente.
+  if (type === 'success') {
+    modalNoticeTimer = setTimeout(() => {
+      modalNotice.value = {
+        type: '',
+        text: ''
+      }
+
+      modalNoticeTimer = null
+    }, 5000)
+  }
+}
+
+const showModalError = (message) => {
+  showModalNotice('error', message)
+}
+
+const showModalSuccess = (message) => {
+  showModalNotice('success', message)
+}
+const clearImageNotice = () => {
+  if (imageNoticeTimer) {
+    clearTimeout(imageNoticeTimer)
+    imageNoticeTimer = null
+  }
+
+  imageNotice.value = {
+    type: '',
+    text: ''
+  }
+}
+
+const showImageNotice = (type, text) => {
+  clearImageNotice()
+
+  imageNotice.value = {
+    type,
+    text
+  }
+
+  /*
+   * Los mensajes positivos desaparecen después de 5 segundos.
+   * Los errores permanecen hasta que el usuario los cierre
+   * o realice otra acción relacionada con imágenes.
+   */
+  if (type === 'success') {
+    imageNoticeTimer = setTimeout(() => {
+      imageNotice.value = {
+        type: '',
+        text: ''
+      }
+
+      imageNoticeTimer = null
+    }, 5000)
+  }
+}
+
+const showImageError = (message) => {
+  showImageNotice('error', message)
+}
+
+const showImageSuccess = (message) => {
+  showImageNotice('success', message)
+}
+const resetImageDeleteConfirmation = () => {
+  imageDeleteConfirm.value = {
+    open: false,
+    type: '',
+    image: null,
+    selectedImageId: '',
+    url: ''
+  }
+}
+
 const stats = computed(() => {
   const total = products.value.length
   const visible = products.value.filter((product) => product.visible_web).length
@@ -400,15 +902,26 @@ const loadData = async () => {
 }
 
 const openCreateModal = () => {
+  clearImageNotice()
+  clearSelectedImages()
+  clearModalNotice()
+  resetImageDeleteConfirmation()
+  resetImageDragState()
+
   editingProduct.value = null
   selectedImage.value = null
   existingImages.value = []
-  selectedImages.value = []
   form.value = emptyForm()
   isModalOpen.value = true
 }
 
 const openEditModal = (product) => {
+  clearImageNotice()
+  clearSelectedImages()
+  resetImageDragState()
+  clearModalNotice()
+  resetImageDeleteConfirmation()
+
   editingProduct.value = product
   selectedImage.value = null
 
@@ -428,21 +941,32 @@ const openEditModal = (product) => {
     seo_descripcion: product.seo_descripcion || ''
   }
 
-    existingImages.value = sortedImages(product.product_images || [])
-    selectedImages.value = []
-  isModalOpen.value = true
+  existingImages.value = sortedImages(
+    product.product_images || []
+  )
 
+  isModalOpen.value = true
 }
 
 const closeModal = (force = false) => {
-  if (saving.value && !force) return
+  if (
+    (saving.value || deletingImage.value) &&
+    !force
+  ) {
+    return
+  }
+
+  clearSelectedImages()
+  resetImageDragState()
 
   isModalOpen.value = false
   editingProduct.value = null
   selectedImage.value = null
   existingImages.value = []
-  selectedImages.value = []
   form.value = emptyForm()
+  clearImageNotice()
+  clearModalNotice()
+  resetImageDeleteConfirmation()
 }
 
 const handleImageChange = (event) => {
@@ -459,7 +983,8 @@ const autoGenerateSlug = () => {
 
 const saveProduct = async () => {
   if (saving.value) return
-
+  clearModalNotice()
+  resetImageDeleteConfirmation()
   errorMessage.value = ''
   successMessage.value = ''
   saving.value = true
@@ -514,7 +1039,7 @@ const saveProduct = async () => {
   } catch (error) {
     console.error('Error al guardar producto:', error)
 
-    showError(
+    showModalError(
       error.message ||
       'No se pudo guardar el producto.'
     )
@@ -578,7 +1103,9 @@ const generateSeoFields = () => {
   const categoryName = getCategoryName(form.value.id_categoria)
 
   if (!name) {
-    showError('Primero escribe el nombre del producto.')
+    showModalError(
+      'Primero escribe el nombre del producto para poder generar el contenido SEO.'
+    )
     return
   }
 
@@ -629,6 +1156,20 @@ onBeforeUnmount(() => {
   if (messageTimer) {
     clearTimeout(messageTimer)
   }
+
+  if (modalNoticeTimer) {
+    clearTimeout(modalNoticeTimer)
+  }
+
+  if (imageNoticeTimer) {
+    clearTimeout(imageNoticeTimer)
+  }
+
+  clearSelectedImages()
+  resetImageDragState()
+  clearModalNotice()
+  clearImageNotice()
+  resetImageDeleteConfirmation()
 })
 
 onMounted(() => {
@@ -941,6 +1482,53 @@ useSeoMeta({
         </div>
 
         <form class="admin-product-form" @submit.prevent="saveProduct">
+          <div
+            v-if="modalNotice.text"
+            class="admin-modal-notice"
+            :class="{
+              'admin-modal-notice-error':
+                modalNotice.type === 'error',
+              'admin-modal-notice-success':
+                modalNotice.type === 'success'
+            }"
+            :role="
+              modalNotice.type === 'error'
+                ? 'alert'
+                : 'status'
+            "
+            :aria-live="
+              modalNotice.type === 'error'
+                ? 'assertive'
+                : 'polite'
+            "
+          >
+            <span class="admin-modal-notice-icon">
+              {{ modalNotice.type === 'error' ? '!' : '✓' }}
+            </span>
+
+            <div class="admin-modal-notice-content">
+              <strong>
+                {{
+                  modalNotice.type === 'error'
+                    ? 'Revisa lo siguiente'
+                    : 'Listo'
+                }}
+              </strong>
+
+              <p>
+                {{ modalNotice.text }}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              class="admin-modal-notice-close"
+              aria-label="Cerrar mensaje"
+              @click="clearModalNotice"
+            >
+              ×
+            </button>
+          </div>
           <label class="admin-form-field admin-form-field-wide">
             Nombre del producto
             <input
@@ -1014,51 +1602,211 @@ useSeoMeta({
             </select>
           </label>
 
-        <div class="admin-form-field admin-form-field-wide">
-        <span>Imágenes del producto</span>
+          <div class="admin-form-field admin-form-field-wide">
+            <span>Imágenes del producto</span>
 
-        <div class="admin-image-manager">
             <div
-            v-for="preview in previewImages"
-            :key="preview.id"
-            class="admin-image-preview"
+              class="admin-image-dropzone"
+              :class="{
+                'admin-image-dropzone-active': isDraggingImages,
+                'admin-image-dropzone-disabled':
+                !canAddImages || imageManagerLocked
+              }"
+              :aria-disabled="!canAddImages || imageManagerLocked"
+              @dragenter.prevent="handleImageDragEnter"
+              @dragover.prevent="handleImageDragOver"
+              @dragleave.prevent="handleImageDragLeave"
+              @drop.prevent="handleImagesDrop"
             >
-            <img
-                :src="preview.url"
-                alt="Vista previa del producto"
-            >
+              <input
+                id="admin-product-images"
+                type="file"
+                class="admin-image-dropzone-input"
+                accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                multiple
+                :disabled="!canAddImages || imageManagerLocked"
+                @change="handleImagesChange"
+              >
 
-            <button
-                type="button"
-                class="admin-image-delete"
-                title="Eliminar imagen"
-                @click="preview.type === 'existing'
-                ? removeExistingImage(preview.image)
-                : removeNewImage(preview.index)"
-            >
-                🗑️
-            </button>
+              <label
+                for="admin-product-images"
+                class="admin-image-dropzone-label"
+              >
+                <span class="admin-image-dropzone-icon">
+                  🖼️
+                </span>
+
+                <strong v-if="isDraggingImages">
+                  Suelta las imágenes aquí
+                </strong>
+
+                <strong v-else-if="canAddImages">
+                  Arrastra imágenes aquí
+                </strong>
+
+                <strong v-else>
+                  Ya alcanzaste el máximo de 5 imágenes
+                </strong>
+
+                <small v-if="canAddImages && !saving">
+                  También puedes hacer clic para seleccionarlas
+                </small>
+
+                <small v-else-if="saving">
+                  Espera mientras termina el guardado
+                </small>
+
+                <span class="admin-image-dropzone-count">
+                  {{ totalImageCount }} de {{ maxProductImages }} imágenes
+                </span>
+              </label>
             </div>
 
-            <label
-            v-if="canAddImages"
-            class="admin-image-add"
+            <div
+              v-if="previewImages.length"
+              class="admin-image-manager"
             >
-            <input
-                type="file"
-                accept=".jpg,.jpeg,.png,.webp,.avif,image/jpeg,image/png,image/webp,image/avif"
-                multiple
-                @change="handleImagesChange"
-            >
-            <span>+</span>
-            <small>Agregar imagen</small>
-            </label>
+              <div
+                v-for="preview in previewImages"
+                :key="preview.id"
+                class="admin-image-preview"
+              >
+                <img
+                  :src="preview.url"
+                  alt="Vista previa del producto"
+                >
+
+                <button
+                    type="button"
+                    class="admin-image-delete"
+                    title="Quitar imagen"
+                    :disabled="saving || deletingImage"
+                    @click="requestImageRemoval(preview)"
+                  >
+                    🗑️
+                  </button>
+              </div>
+            </div>
+
+            <div class="admin-image-feedback-slot">
+        <div
+          v-if="imageNotice.text"
+          class="admin-modal-notice admin-image-notice"
+          :class="{
+            'admin-modal-notice-error':
+              imageNotice.type === 'error',
+            'admin-modal-notice-success':
+              imageNotice.type === 'success'
+          }"
+          :role="
+            imageNotice.type === 'error'
+              ? 'alert'
+              : 'status'
+          "
+          :aria-live="
+            imageNotice.type === 'error'
+              ? 'assertive'
+              : 'polite'
+          "
+        >
+          <span class="admin-modal-notice-icon">
+            {{ imageNotice.type === 'error' ? '!' : '✓' }}
+          </span>
+
+          <div class="admin-modal-notice-content">
+            <strong>
+              {{
+                imageNotice.type === 'error'
+                  ? 'Revisa las imágenes'
+                  : 'Imágenes actualizadas'
+              }}
+            </strong>
+
+            <p>
+              {{ imageNotice.text }}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            class="admin-modal-notice-close"
+            aria-label="Cerrar mensaje de imágenes"
+            @click="clearImageNotice"
+          >
+            ×
+          </button>
         </div>
 
-        <small class="admin-field-help">
-            Puedes cargar hasta 5 imágenes por producto. Al pasar el mouse por una imagen aparece el botón para eliminarla.
-        </small>
-        </div>
+        <section
+          v-else-if="imageDeleteConfirm.open"
+          ref="imageDeleteConfirmRef"
+          class="admin-image-delete-confirmation"
+          tabindex="-1"
+          role="group"
+          aria-labelledby="admin-image-delete-title"
+        >
+          <div class="admin-image-delete-confirmation-preview">
+            <img
+              :src="imageDeleteConfirm.url"
+              alt="Imagen que se desea quitar"
+            >
+          </div>
+
+          <div class="admin-image-delete-confirmation-content">
+            <span class="admin-eyebrow">
+              Confirmar eliminación
+            </span>
+
+            <strong id="admin-image-delete-title">
+              {{
+                imageDeleteConfirm.type === 'existing'
+                  ? '¿Eliminar esta imagen del producto?'
+                  : '¿Quitar esta imagen de la selección?'
+              }}
+            </strong>
+
+            <p v-if="imageDeleteConfirm.type === 'existing'">
+              La imagen se eliminará del almacenamiento y dejará de aparecer en el producto.
+            </p>
+
+            <p v-else>
+              Esta imagen todavía no fue subida. Únicamente se quitará de la selección actual.
+            </p>
+          </div>
+
+          <div class="admin-image-delete-confirmation-actions">
+            <button
+              type="button"
+              class="admin-button admin-button-secondary"
+              :disabled="deletingImage"
+              @click="cancelImageRemoval"
+            >
+              Cancelar
+            </button>
+
+            <button
+              type="button"
+              class="admin-button admin-button-danger"
+              :disabled="deletingImage"
+              @click="confirmImageRemoval"
+            >
+              {{
+                deletingImage
+                  ? 'Eliminando...'
+                  : imageDeleteConfirm.type === 'existing'
+                    ? 'Sí, eliminar imagen'
+                    : 'Sí, quitar imagen'
+              }}
+            </button>
+          </div>
+        </section>
+      </div>
+
+            <small class="admin-field-help">
+              Formatos permitidos: JPEG, PNG y WEBP.
+              Máximo 5 MB por imagen y 5 imágenes por producto.
+            </small>
+          </div>
 
           <label class="admin-form-field admin-form-field-wide">
             Descripción

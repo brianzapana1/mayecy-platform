@@ -177,7 +177,7 @@ useSeoMeta({
           </h1>
 
           <p class="products-intro">
-            Encuentra tóners, tintas, cartuchos, papel para plotter, recargas e insumos para impresoras y fotocopiadoras.
+            Encuentra nuestros productos:
           </p>
         </div>
       </div>

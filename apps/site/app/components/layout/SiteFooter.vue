@@ -80,7 +80,7 @@ const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`
               +591 71930704
             </a>
 
-            <span>(2) 2313865</span>
+
             <span>Calle México No. 1483
             <br /> esq. Nicolás Acosta, Zona San Pedro <br />La Paz</span>
           </div>

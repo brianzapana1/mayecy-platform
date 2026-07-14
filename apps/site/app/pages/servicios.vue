@@ -2,7 +2,7 @@
 useSeoMeta({
   title: 'Servicios | Mayecy',
   description:
-  'Servicios de Mayecy: recargas, mantenimiento, asesoramiento, papel para plotter e insumos para impresoras, fotocopiadoras y equipos de oficina en La Paz.'
+  'Servicios de Mayecy: recargas, asesoramiento, papel para plotter, rollos térmicos e insumos para impresoras, fotocopiadoras y equipos de oficina en La Paz.'
 })
 
 const brands = [
@@ -33,24 +33,16 @@ const brands = [
 ]
 
 const services = [
-{
-  title: 'Recargas',
-  image: '/images/services/recargas.png',
-  description:
-    'Brindamos el servicio de recargas y asesoramiento sobre suministros que necesita su equipo. Ofrecemos un servicio de garantía con suministros originales para cada marca.',
-  action: 'Haga su consulta',
-  href: 'https://wa.me/59171930704?text=Hola%20Mayecy%2C%20quiero%20consultar%20sobre%20el%20servicio%20de%20recargas.'
-},
   {
-  title: 'Mantenimiento',
-  image: '/images/services/mantenimiento.png',
-  description:
-    'Para un buen funcionamiento, llámenos para realizar el mantenimiento a todos sus equipos de oficina. Planifique un cronograma de mantenimiento periódico para todos sus equipos.',
-  action: 'Haga su consulta',
-  href: 'https://wa.me/59171930704?text=Hola%20Mayecy%2C%20quiero%20consultar%20sobre%20mantenimiento%20de%20equipos.'
-}
+    title: 'Recargas',
+    image: '/images/services/recargas.png',
+    description:
+      'Brindamos el servicio de recarga de cartuchos y tóners para impresoras y fotocopiadoras de diferentes marcas y modelos. También ofrecemos asesoramiento para identificar el suministro adecuado según las características de su equipo, buscando una alternativa conveniente para sus necesidades de impresión. Consulte con nosotros indicando la marca y el modelo de su impresora o fotocopiadora para recibir una atención más precisa.',
+    action: 'Haga su consulta',
+    href:
+      'https://wa.me/59171930704?text=Hola%20Mayecy%2C%20quiero%20consultar%20sobre%20el%20servicio%20de%20recargas.'
+  }
 ]
-
 const extraServices = [
   {
     title: 'Asesoramiento',
@@ -82,7 +74,7 @@ const extraServices = [
           </h1>
 
           <p class="services-intro">
-            Brindamos servicios de recargas, mantenimiento y asesoramiento para que sus equipos de oficina funcionen correctamente.
+            Brindamos servicios de recargas y asesoramiento para que sus equipos de oficina funcionen correctamente.
           </p>
         </div>
 
@@ -93,6 +85,7 @@ const extraServices = [
           <p>Tóners</p>
           <p>Recargas</p>
           <p>Papel para plotter</p>
+          <p>Rollos térmicos</p>
         </div>
       </div>
 
