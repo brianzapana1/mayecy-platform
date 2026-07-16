@@ -1,22 +1,16 @@
 <script setup>
-import { getPublicProducts } from '~/services/productService'
+import { getPublicProductsPage } from '~/services/productService'
 import { getPublicCategories } from '~/services/categoryService'
 
 const searchTerm = ref('')
+const debouncedSearchTerm = ref('')
 const selectedCategory = ref('')
 const currentPage = ref(1)
 const productsPerPage = 9
 const selectedProduct = ref(null)
 const paginationAnchor = ref(null)
-const { data: products, pending: productsPending, error: productsError } = await useAsyncData(
-  'public-products',
-  () => getPublicProducts()
-)
 
-const { data: categories, pending: categoriesPending } = await useAsyncData(
-  'public-categories',
-  () => getPublicCategories()
-)
+let searchTimer = null
 
 const normalizeText = (value) => {
   return String(value || '')
@@ -26,40 +20,135 @@ const normalizeText = (value) => {
     .trim()
 }
 
-const filteredProducts = computed(() => {
-  const items = products.value || []
-  const term = normalizeText(searchTerm.value)
+/*
+ * Las categorías también se cargan sin bloquear
+ * la entrada a la página.
+ */
+const {
+  data: categories,
+  status: categoriesStatus,
+  error: categoriesError
+} = await useLazyAsyncData(
+  'public-categories',
+  () => getPublicCategories(),
+  {
+    server: false,
+    default: () => []
+  }
+)
 
-  return items.filter((product) => {
-    const categorySlug = product.categorias?.slug || ''
+/*
+ * Convierte el slug seleccionado al id_categoria
+ * que necesita la consulta de Supabase.
+ */
+const selectedCategoryId = computed(() => {
+  if (!selectedCategory.value) {
+    return null
+  }
 
-    const matchesCategory = selectedCategory.value
-      ? categorySlug === selectedCategory.value
-      : true
-
-    const searchableText = normalizeText([
-      product.nombre,
-      product.marca,
-      product.categorias?.nombre
-    ].join(' '))
-
-    const matchesSearch = term
-      ? searchableText.includes(term)
-      : true
-
-    return matchesCategory && matchesSearch
+  const category = (categories.value || []).find((item) => {
+    return item.slug === selectedCategory.value
   })
+
+  return category?.id_categoria || null
+})
+
+/*
+ * Permite que una búsqueda como "tóners"
+ * también encuentre productos mediante la categoría.
+ */
+const matchingSearchCategoryIds = computed(() => {
+  const term = normalizeText(
+    debouncedSearchTerm.value
+  )
+
+  if (!term) {
+    return []
+  }
+
+  return (categories.value || [])
+    .filter((category) => {
+      return normalizeText(category.nombre)
+        .includes(term)
+    })
+    .map((category) => category.id_categoria)
+})
+
+/*
+ * La cadena se utiliza como dependencia estable
+ * de useLazyAsyncData.
+ */
+const matchingSearchCategoryIdsKey = computed(() => {
+  return matchingSearchCategoryIds.value.join(',')
+})
+
+/*
+ * La consulta se ejecuta nuevamente cuando cambia:
+ * - la página;
+ * - la búsqueda;
+ * - la categoría.
+ *
+ * server:false garantiza que el catálogo consulte
+ * datos actuales desde Supabase en el navegador.
+ */
+const {
+  data: productsResult,
+  status: productsStatus,
+  error: productsError
+} = await useLazyAsyncData(
+  'public-products-page',
+  () => getPublicProductsPage({
+    page: currentPage.value,
+    pageSize: productsPerPage,
+    search: debouncedSearchTerm.value,
+    categoryId: selectedCategoryId.value,
+    categorySearchIds:
+      matchingSearchCategoryIds.value
+  }),
+  {
+    server: false,
+    default: () => ({
+      items: [],
+      total: 0
+    }),
+    watch: [
+      currentPage,
+      debouncedSearchTerm,
+      selectedCategoryId,
+      matchingSearchCategoryIdsKey
+    ]
+  }
+)
+
+const products = computed(() => {
+  return productsResult.value?.items || []
+})
+
+const totalProducts = computed(() => {
+  return Number(productsResult.value?.total || 0)
 })
 
 const totalPages = computed(() => {
-  return Math.max(1, Math.ceil(filteredProducts.value.length / productsPerPage))
+  return Math.max(
+    1,
+    Math.ceil(
+      totalProducts.value / productsPerPage
+    )
+  )
 })
 
-const paginatedProducts = computed(() => {
-  const start = (currentPage.value - 1) * productsPerPage
-  const end = start + productsPerPage
+const productsLoading = computed(() => {
+  return (
+    productsStatus.value === 'idle' ||
+    productsStatus.value === 'pending'
+  )
+})
 
-  return filteredProducts.value.slice(start, end)
+const categoriesLoading = computed(() => {
+  return (
+    categoriesStatus.value === 'idle' ||
+    categoriesStatus.value === 'pending'
+  )
 })
 
 const paginationPages = computed(() => {
@@ -81,21 +170,31 @@ const paginationPages = computed(() => {
   })
 
   if (total <= 7) {
-    return Array.from({ length: total }, (_, index) => pageItem(index + 1))
+    return Array.from(
+      { length: total },
+      (_, index) => pageItem(index + 1)
+    )
   }
 
-  const groupIndex = Math.floor((current - 1) / groupSize)
+  const groupIndex = Math.floor(
+    (current - 1) / groupSize
+  )
 
   let start = groupIndex * groupSize + 1
   let end = start + visibleCount - 1
 
   if (end > total) {
     end = total
-    start = Math.max(1, total - visibleCount + 1)
+    start = Math.max(
+      1,
+      total - visibleCount + 1
+    )
   }
 
   const visiblePages = Array.from(
-    { length: end - start + 1 },
+    {
+      length: end - start + 1
+    },
     (_, index) => pageItem(start + index)
   )
 
@@ -117,7 +216,12 @@ const paginationPages = computed(() => {
 })
 
 const scrollToPaginationAnchor = () => {
-  if (!import.meta.client || !paginationAnchor.value) return
+  if (
+    !import.meta.client ||
+    !paginationAnchor.value
+  ) {
+    return
+  }
 
   paginationAnchor.value.scrollIntoView({
     behavior: 'smooth',
@@ -126,7 +230,13 @@ const scrollToPaginationAnchor = () => {
 }
 
 const clearFilters = () => {
+  if (searchTimer) {
+    clearTimeout(searchTimer)
+    searchTimer = null
+  }
+
   searchTerm.value = ''
+  debouncedSearchTerm.value = ''
   selectedCategory.value = ''
   currentPage.value = 1
 }
@@ -137,7 +247,13 @@ const selectCategory = (slug) => {
 }
 
 const goToPage = (page) => {
-  if (page < 1 || page > totalPages.value) return
+  if (
+    page < 1 ||
+    page > totalPages.value ||
+    page === currentPage.value
+  ) {
+    return
+  }
 
   currentPage.value = page
 
@@ -154,8 +270,39 @@ const closeProductModal = () => {
   selectedProduct.value = null
 }
 
-watch(searchTerm, () => {
+/*
+ * Espera 300 ms después de escribir.
+ * Así no consulta Supabase por cada tecla.
+ */
+watch(searchTerm, (value) => {
   currentPage.value = 1
+
+  if (searchTimer) {
+    clearTimeout(searchTimer)
+  }
+
+  searchTimer = setTimeout(() => {
+    debouncedSearchTerm.value =
+      String(value || '').trim()
+
+    searchTimer = null
+  }, 300)
+})
+
+/*
+ * Si un filtro reduce la cantidad de páginas,
+ * evita quedar parado en una página inexistente.
+ */
+watch(totalPages, (newTotal) => {
+  if (currentPage.value > newTotal) {
+    currentPage.value = newTotal
+  }
+})
+
+onBeforeUnmount(() => {
+  if (searchTimer) {
+    clearTimeout(searchTimer)
+  }
 })
 
 useSeoMeta({
@@ -241,7 +388,7 @@ useSeoMeta({
         <ProductFilters
           :categories="categories || []"
           :selected-category="selectedCategory"
-          :total-products="filteredProducts.length"
+          :total-products="totalProducts"
           @select-category="selectCategory"
         />
 
@@ -251,7 +398,7 @@ useSeoMeta({
             class="active-filters"
           >
             <span>
-              {{ filteredProducts.length }} resultado(s)
+              {{ totalProducts }} resultado(s)
             </span>
 
             <button type="button" @click="clearFilters">
@@ -259,7 +406,10 @@ useSeoMeta({
             </button>
           </div>
 
-          <p v-if="productsPending || categoriesPending" class="products-loading">
+          <p
+              v-if="productsLoading || categoriesLoading"
+              class="products-loading"
+            >
             Cargando productos...
           </p>
 
@@ -269,7 +419,7 @@ useSeoMeta({
 
           <template v-else>
             <ProductGrid
-              :products="paginatedProducts"
+              :products="products"
               @select-product="openProductModal"
             />
 
