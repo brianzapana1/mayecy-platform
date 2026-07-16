@@ -28,13 +28,9 @@ const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`
     <div class="container footer-inner">
       <div class="footer-main">
         <section class="footer-brand-area">
-          <NuxtLink to="/" class="footer-logo-link">
-            <img
-              class="footer-logo"
-              src="/images/brand/logo-mayecy.png"
-              alt="Mayecy Insumos"
-            >
-          </NuxtLink>
+          <span class="footer-brand-title">
+            Mayecy
+          </span>
 
           <p class="footer-lead">
             Variedad de insumos para impresoras y fotocopiadoras en La Paz.
@@ -68,21 +64,35 @@ const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`
 
         <div class="footer-divider" />
 
-        <section class="footer-group">
+        <section class="footer-group footer-contact-group">
           <h3>Contacto</h3>
 
           <div class="footer-contact">
             <a
+              class="footer-phone"
               :href="whatsappUrl"
               target="_blank"
               rel="noopener noreferrer"
+              aria-label="Consultar a Mayecy por WhatsApp al 71930704"
             >
-              +591 71930704
+              <strong>
+                +591 71930704
+              </strong>
             </a>
 
+            <address class="footer-address">
+              <strong>
+                Calle México No. 1483
+              </strong>
 
-            <span>Calle México No. 1483
-            <br /> esq. Nicolás Acosta, Zona San Pedro <br />La Paz</span>
+              <span>
+                Esquina Nicolás Acosta
+              </span>
+
+              <span>
+                Zona San Pedro, La Paz, Bolivia
+              </span>
+            </address>
           </div>
         </section>
       </div>

@@ -70,7 +70,7 @@ const extraServices = [
           <span class="home-eyebrow">Nuestros servicios</span>
 
           <h1 class="services-title">
-            Soluciones para impresoras, fotocopiadoras y oficinas
+            Soluciones para impresoras y fotocopiadoras
           </h1>
 
           <p class="services-intro">

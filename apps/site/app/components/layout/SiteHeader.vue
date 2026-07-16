@@ -63,19 +63,17 @@ onMounted(() => {
 <header class="site-header" :class="{ 'site-header-scrolled': isScrolled }">    
   <div class="header-accent" />
     <div class="container navbar">
-      <NuxtLink to="/" class="brand" @click="closeMenu">
+      <NuxtLink
+        to="/"
+        class="brand"
+        aria-label="Ir al inicio de Mayecy"
+        @click="closeMenu"
+      >
         <img
           class="brand-image"
           src="/images/brand/logo-mayecy.png"
           alt="Mayecy Insumos"
         >
-
-        <div class="brand-copy">
-          <span class="brand-name">MAYECY</span>
-          <span class="brand-line">
-            Variedad de insumos para impresoras y fotocopiadoras
-          </span>        
-        </div>
       </NuxtLink>
 
       <nav class="nav-links" aria-label="Navegación principal">

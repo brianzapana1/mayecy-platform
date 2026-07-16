@@ -93,10 +93,11 @@ button {
 }
 
 .brand {
+  min-width: 130px;
   display: inline-flex;
   align-items: center;
-  gap: 12px;
-  min-width: 245px;
+  justify-content: flex-start;
+  flex: 0 0 auto;
 }
 
 .brand-image {
@@ -310,17 +311,13 @@ button {
 
 @media (max-width: 1100px) {
   .brand {
-    min-width: 220px;
+    min-width: 110px;
   }
 
   .brand-image {
     width: 96px;
   }
 
-  .brand-line {
-    max-width: 210px;
-    font-size: 0.7rem;
-  }
 
   .nav-link {
     padding-inline: 11px;
@@ -355,6 +352,10 @@ button {
   .mobile-panel[hidden] {
     display: none;
   }
+
+  .brand {
+    min-width: 0;
+  }
 }
 
 @media (max-width: 520px) {
@@ -362,9 +363,6 @@ button {
     width: 92px;
   }
 
-  .brand-copy {
-    display: none;
-  }
 }
 
 /* FOOTER */
@@ -519,6 +517,8 @@ button {
   font-weight: 800;
   transition: color 0.2s ease, transform 0.2s ease;
 }
+
+
 
 .footer-nav a::before {
   content: "";
@@ -5188,5 +5188,1218 @@ button {
     font-size: 0.8rem;
     line-height: 1.45;
     letter-spacing: -0.015em;
+  }
+}
+
+/* =========================================================
+   FOOTER SIN LOGO Y CONTACTO MÁS VISIBLE
+   ========================================================= */
+
+.footer-main {
+  grid-template-columns:
+    minmax(230px, 1fr)
+    auto
+    minmax(170px, 0.72fr)
+    auto
+    minmax(320px, 1.35fr);
+  gap: 32px;
+  padding: 36px;
+}
+
+/* PRIMER BLOQUE SIN LOGO */
+.footer-brand-title {
+  display: inline-flex;
+  width: fit-content;
+  margin-bottom: 16px;
+  color: var(--pink-main);
+  font-size: clamp(1.35rem, 2vw, 1.85rem);
+  font-weight: 950;
+  line-height: 1;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.footer-lead {
+  max-width: 360px;
+  margin: 0 0 24px;
+  color: var(--ink);
+  font-size: clamp(1rem, 1.25vw, 1.16rem);
+  line-height: 1.7;
+  font-weight: 750;
+}
+
+.footer-primary-action {
+  min-height: 46px;
+  padding: 12px 20px;
+  font-size: 0.84rem;
+}
+
+/* LETRAS GENERALES DEL FOOTER */
+.footer-group h3 {
+  margin-bottom: 20px;
+  font-size: clamp(0.94rem, 1.1vw, 1.08rem);
+}
+
+.footer-nav {
+  gap: 12px;
+}
+
+.footer-nav a {
+  font-size: clamp(0.96rem, 1.05vw, 1.08rem);
+  line-height: 1.4;
+}
+
+/* CONTACTO DESTACADO */
+.footer-contact-group {
+  min-width: 0;
+}
+
+.footer-contact {
+  width: 100%;
+  display: grid;
+  gap: 16px;
+}
+
+.footer-phone {
+  width: fit-content;
+  max-width: 100%;
+  display: grid;
+  gap: 4px;
+  padding: 15px 20px;
+  border-radius: 22px;
+  color: white;
+  background:
+    linear-gradient(
+      135deg,
+      var(--pink-main),
+      var(--cyan-main)
+    );
+  box-shadow:
+    0 18px 36px rgba(197, 0, 104, 0.2);
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+.footer-phone:hover {
+  color: white;
+  transform: translateY(-3px);
+  box-shadow:
+    0 24px 46px rgba(197, 0, 104, 0.26);
+}
+
+.footer-phone-label {
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 0.7rem;
+  font-weight: 950;
+  line-height: 1;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.footer-phone strong {
+  color: white;
+  font-size: clamp(1.45rem, 2.15vw, 2.15rem);
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+  white-space: nowrap;
+}
+
+/* DIRECCIÓN DESTACADA */
+.footer-address {
+  width: 100%;
+  max-width: 410px;
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding: 17px 19px;
+  border-radius: 22px;
+  color: var(--ink);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.72),
+      rgba(255, 255, 255, 0.43)
+    );
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  box-shadow:
+    0 14px 30px rgba(197, 0, 104, 0.08);
+  font-size: clamp(1rem, 1.3vw, 1.22rem);
+  font-style: normal;
+  font-weight: 750;
+  line-height: 1.5;
+}
+
+.footer-address strong {
+  color: var(--pink-main-dark);
+  font-size: clamp(1.12rem, 1.5vw, 1.38rem);
+  font-weight: 950;
+  line-height: 1.25;
+}
+
+.footer-address span {
+  overflow-wrap: anywhere;
+}
+
+/* PANTALLAS MEDIANAS */
+@media (max-width: 1120px) {
+  .footer-main {
+    grid-template-columns:
+      minmax(210px, 1fr)
+      auto
+      minmax(150px, 0.7fr)
+      auto
+      minmax(280px, 1.15fr);
+    gap: 24px;
+    padding: 32px;
+  }
+
+  .footer-phone {
+    padding: 14px 17px;
+  }
+
+  .footer-phone strong {
+    font-size: clamp(1.35rem, 2vw, 1.8rem);
+  }
+
+  .footer-address {
+    padding: 16px;
+  }
+}
+
+/* TABLET */
+@media (max-width: 980px) {
+  .footer-main {
+    grid-template-columns: 1fr;
+    gap: 26px;
+  }
+
+  .footer-brand-area {
+    align-items: flex-start;
+  }
+
+  .footer-lead {
+    max-width: 620px;
+  }
+
+  .footer-contact-group {
+    width: 100%;
+  }
+
+  .footer-phone {
+    width: fit-content;
+  }
+
+  .footer-phone strong {
+    font-size: clamp(1.55rem, 4vw, 2rem);
+  }
+
+  .footer-address {
+    max-width: 620px;
+  }
+}
+
+/* MÓVIL */
+@media (max-width: 620px) {
+  .site-footer {
+    padding-top: 44px;
+  }
+
+  .footer-main {
+    gap: 22px;
+    padding: 24px 20px;
+    border-radius: 28px;
+  }
+
+  .footer-brand-area {
+    align-items: center;
+    text-align: center;
+  }
+
+  .footer-brand-title {
+    margin-inline: auto;
+    font-size: 1.35rem;
+  }
+
+  .footer-lead {
+    max-width: 100%;
+    font-size: 1rem;
+  }
+
+  .footer-primary-action {
+    width: 100%;
+  }
+
+  .footer-group {
+    text-align: center;
+  }
+
+  .footer-group h3 {
+    font-size: 1rem;
+  }
+
+  .footer-nav {
+    justify-items: center;
+  }
+
+  .footer-nav a {
+    font-size: 1rem;
+  }
+
+  .footer-contact {
+    justify-items: stretch;
+  }
+
+  .footer-phone {
+    width: 100%;
+    justify-items: center;
+    padding: 16px;
+  }
+
+  .footer-phone strong {
+    font-size: clamp(1.5rem, 7vw, 1.9rem);
+    white-space: normal;
+  }
+
+  .footer-address {
+    max-width: 100%;
+    justify-items: center;
+    padding: 18px 16px;
+    font-size: 1.05rem;
+    text-align: center;
+  }
+
+  .footer-address strong {
+    font-size: 1.2rem;
+  }
+
+  .footer-bottom {
+    font-size: 0.82rem;
+    line-height: 1.55;
+  }
+}
+
+/* CELULARES PEQUEÑOS */
+@media (max-width: 390px) {
+  .footer-main {
+    padding: 21px 16px;
+    border-radius: 25px;
+  }
+
+  .footer-phone {
+    padding: 15px 12px;
+    border-radius: 19px;
+  }
+
+  .footer-phone strong {
+    font-size: 1.42rem;
+  }
+
+  .footer-address {
+    padding: 16px 13px;
+    border-radius: 19px;
+    font-size: 0.98rem;
+  }
+
+  .footer-address strong {
+    font-size: 1.1rem;
+  }
+
+  .footer-bottom {
+    padding-inline: 0;
+    font-size: 0.76rem;
+  }
+}
+
+/* BOTÓN CONSULTAR POR WHATSAPP DEL FOOTER */
+.footer-primary-action {
+  min-height: 36px;
+  padding: 8px 14px;
+  font-size: 0.7rem;
+}
+
+.footer-phone {
+  padding: 12px 17px;
+  border-radius: 19px;
+}
+
+.footer-phone strong {
+  font-size: clamp(1.25rem, 1.8vw, 1.8rem);
+}
+
+/* =========================================================
+   CONTACTO COMPACTO DEL FOOTER
+   ========================================================= */
+
+.footer-contact {
+  width: 100%;
+  display: grid;
+  gap: 12px;
+}
+
+/* NÚMERO DE WHATSAPP SIN BORDE NI DEGRADADO */
+.footer-phone {
+  width: fit-content;
+  max-width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 16px;
+
+  color: var(--pink-main-dark);
+  background: rgba(242, 7, 134, 0.1);
+
+  box-shadow: 0 10px 22px rgba(197, 0, 104, 0.08);
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.footer-phone:hover {
+  color: var(--pink-main-dark);
+  background: rgba(242, 7, 134, 0.16);
+
+  transform: translateY(-2px);
+
+  box-shadow: 0 14px 28px rgba(197, 0, 104, 0.12);
+}
+
+.footer-phone strong {
+  color: var(--pink-main);
+  font-size: clamp(1.15rem, 1.55vw, 1.5rem);
+  font-weight: 950;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+/* DIRECCIÓN MÁS PEQUEÑA Y COMPACTA */
+.footer-address {
+  width: 100%;
+  max-width: 370px;
+  display: grid;
+  gap: 3px;
+
+  margin: 0;
+  padding: 13px 15px;
+
+  border: 0;
+  border-radius: 18px;
+
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.5);
+
+  box-shadow: 0 10px 22px rgba(197, 0, 104, 0.06);
+
+  font-size: clamp(0.86rem, 1vw, 0.98rem);
+  font-style: normal;
+  font-weight: 750;
+  line-height: 1.42;
+}
+
+.footer-address strong {
+  color: var(--pink-main-dark);
+  font-size: clamp(0.98rem, 1.15vw, 1.1rem);
+  font-weight: 950;
+  line-height: 1.25;
+}
+
+.footer-address span {
+  overflow-wrap: anywhere;
+}
+
+/* TABLET */
+@media (max-width: 980px) {
+  .footer-phone {
+    padding: 10px 15px;
+  }
+
+  .footer-phone strong {
+    font-size: clamp(1.18rem, 3vw, 1.45rem);
+  }
+
+  .footer-address {
+    max-width: 520px;
+    padding: 13px 15px;
+    font-size: 0.94rem;
+  }
+
+  .footer-address strong {
+    font-size: 1.05rem;
+  }
+}
+
+/* MÓVIL */
+@media (max-width: 620px) {
+  .footer-contact {
+    justify-items: center;
+    gap: 10px;
+  }
+
+  .footer-phone {
+    width: fit-content;
+    margin-inline: auto;
+    padding: 10px 14px;
+    border-radius: 15px;
+  }
+
+  .footer-phone strong {
+    font-size: clamp(1.14rem, 6vw, 1.38rem);
+    white-space: normal;
+    text-align: center;
+  }
+
+  .footer-address {
+    width: 100%;
+    max-width: 100%;
+    justify-items: center;
+
+    padding: 12px 14px;
+    border-radius: 16px;
+
+    font-size: 0.9rem;
+    text-align: center;
+  }
+
+  .footer-address strong {
+    font-size: 1rem;
+  }
+}
+
+/* CELULARES PEQUEÑOS */
+@media (max-width: 390px) {
+  .footer-phone {
+    padding: 9px 12px;
+    border-radius: 14px;
+  }
+
+  .footer-phone strong {
+    font-size: 1.12rem;
+  }
+
+  .footer-address {
+    padding: 11px 12px;
+    border-radius: 15px;
+    font-size: 0.84rem;
+  }
+
+  .footer-address strong {
+    font-size: 0.94rem;
+  }
+}
+
+/* =========================================================
+   TARJETAS DE CONTACTO CENTRADAS Y EQUILIBRADAS
+   ========================================================= */
+
+.contact-grid {
+  position: relative;
+  z-index: 1;
+
+  width: 100%;
+  max-width: 1240px;
+
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 24px;
+
+  margin-inline: auto;
+  padding-top: 76px;
+}
+
+/* TARJETA INDIVIDUAL */
+.contact-card {
+  width: 100%;
+  min-width: 0;
+  min-height: 400px;
+
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto minmax(0, 1fr);
+  justify-items: center;
+  align-items: start;
+  gap: 22px;
+
+  padding: 28px 24px;
+  border-radius: 34px;
+  text-align: center;
+
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(69, 200, 239, 0.12),
+      transparent 44%
+    ),
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.74),
+      rgba(255, 255, 255, 0.46)
+    );
+
+  border: 1px solid rgba(255, 255, 255, 0.76);
+  box-shadow: 0 18px 40px rgba(197, 0, 104, 0.1);
+
+  overflow: hidden;
+
+  transition:
+    transform 0.24s ease,
+    box-shadow 0.24s ease;
+}
+
+.contact-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 28px 58px rgba(197, 0, 104, 0.16);
+}
+
+/* ÍCONO CENTRADO */
+.contact-card .contact-icon-frame {
+  width: 104px;
+  height: 104px;
+
+  display: grid;
+  place-items: center;
+
+  margin: 0 auto;
+  padding: 18px;
+  border-radius: 30px;
+}
+
+/* CONTENIDO DE LA TARJETA */
+.contact-card-content {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  text-align: center;
+}
+
+.contact-card-content > span {
+  display: inline-flex;
+  justify-content: center;
+
+  margin-bottom: 10px;
+
+  color: var(--cyan-dark);
+  font-size: 0.78rem;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* VALORES: TELÉFONO Y ATENCIÓN EN LA PAZ */
+.contact-card-value {
+  width: 100%;
+  max-width: 100%;
+
+  margin: 0 0 12px;
+
+  color: var(--pink-main);
+  font-size: clamp(1.05rem, 1.55vw, 1.38rem);
+  line-height: 1.22;
+
+  overflow-wrap: anywhere;
+}
+
+/* CORREO */
+.contact-card-email {
+  display: block;
+
+  width: 100%;
+  max-width: 100%;
+
+  margin: 0 0 12px;
+
+  color: var(--pink-main);
+  font-size: clamp(0.78rem, 1.02vw, 0.96rem);
+  font-weight: 900;
+  line-height: 1.4;
+  letter-spacing: -0.015em;
+
+  text-align: center;
+  text-transform: lowercase;
+  overflow-wrap: anywhere;
+  word-break: normal;
+
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.contact-card-email:hover {
+  color: var(--cyan-dark);
+  transform: translateY(-1px);
+}
+
+/* DESCRIPCIÓN */
+.contact-card-content p {
+  width: 100%;
+  max-width: 330px;
+
+  margin: 0 0 22px;
+
+  color: var(--ink);
+  font-size: 0.96rem;
+  line-height: 1.65;
+  text-align: center;
+}
+
+/* BOTÓN ALINEADO ABAJO */
+.contact-card-content .mayecy-button {
+  width: fit-content;
+  min-width: 150px;
+
+  margin-top: auto;
+  margin-inline: auto;
+
+  text-align: center;
+}
+
+/* =========================================================
+   PANTALLAS MEDIANAS
+   ========================================================= */
+
+@media (max-width: 1120px) {
+  .contact-grid {
+    gap: 20px;
+  }
+
+  .contact-card {
+    min-height: 390px;
+    padding: 26px 20px;
+  }
+
+  .contact-card-email {
+    font-size: clamp(0.75rem, 1.15vw, 0.9rem);
+  }
+
+  .contact-card-content p {
+    font-size: 0.92rem;
+  }
+}
+
+/* =========================================================
+   TABLET: DOS TARJETAS Y LA TERCERA CENTRADA
+   ========================================================= */
+
+@media (max-width: 980px) {
+  .contact-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
+    padding-top: 64px;
+  }
+
+  .contact-card {
+    min-height: 370px;
+  }
+
+  /*
+   * Con tres tarjetas, la última ocupa las dos columnas,
+   * pero conserva un ancho equilibrado y queda centrada.
+   */
+  .contact-card:last-child:nth-child(odd) {
+    width: min(100%, 540px);
+    grid-column: 1 / -1;
+    justify-self: center;
+  }
+
+  .contact-card-email {
+    font-size: clamp(0.86rem, 1.8vw, 1rem);
+  }
+}
+
+/* =========================================================
+   MÓVIL
+   ========================================================= */
+
+@media (max-width: 620px) {
+  .contact-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    padding-top: 52px;
+  }
+
+  .contact-card,
+  .contact-card:last-child:nth-child(odd) {
+    width: 100%;
+    min-height: 350px;
+
+    grid-column: auto;
+    justify-self: stretch;
+
+    padding: 24px 20px;
+    border-radius: 28px;
+  }
+
+  .contact-card .contact-icon-frame {
+    width: 96px;
+    height: 96px;
+    padding: 17px;
+  }
+
+  .contact-card-value {
+    font-size: clamp(1.05rem, 5vw, 1.28rem);
+  }
+
+  .contact-card-email {
+    font-size: clamp(0.86rem, 4vw, 1rem);
+  }
+
+  .contact-card-content p {
+    max-width: 360px;
+    font-size: 0.94rem;
+  }
+
+  .contact-card-content .mayecy-button {
+    width: min(100%, 240px);
+  }
+}
+
+/* =========================================================
+   CELULARES PEQUEÑOS
+   ========================================================= */
+
+@media (max-width: 390px) {
+  .contact-grid {
+    gap: 16px;
+    padding-top: 44px;
+  }
+
+  .contact-card,
+  .contact-card:last-child:nth-child(odd) {
+    min-height: 330px;
+    padding: 22px 16px;
+    border-radius: 25px;
+  }
+
+  .contact-card .contact-icon-frame {
+    width: 88px;
+    height: 88px;
+    padding: 15px;
+    border-radius: 25px;
+  }
+
+  .contact-card-content > span {
+    font-size: 0.7rem;
+  }
+
+  .contact-card-value {
+    font-size: 1.05rem;
+  }
+
+  .contact-card-email {
+    font-size: 0.8rem;
+    line-height: 1.45;
+  }
+
+  .contact-card-content p {
+    font-size: 0.88rem;
+    line-height: 1.58;
+  }
+
+  .contact-card-content .mayecy-button {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+/* =========================================================
+   ENCABEZADOS MAYECY:
+   ETIQUETA PRINCIPAL GRANDE + TÍTULO SECUNDARIO
+   ========================================================= */
+
+/*
+ * Primer nivel visual:
+ * CONTÁCTENOS, QUIÉNES SOMOS, NUESTROS SERVICIOS,
+ * CATEGORÍAS PRINCIPALES, MARCAS, etc.
+ */
+.home-eyebrow {
+  position: relative;
+
+  width: min(100%, 820px);
+  min-height: auto;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+
+  margin-inline: auto;
+  padding: 0;
+
+  border: 0;
+  border-radius: 0;
+
+  color: var(--pink-main);
+  background: transparent;
+  box-shadow: none;
+
+  font-size: clamp(1.9rem, 3vw, 2.65rem);
+  font-weight: 950;
+  line-height: 1.1;
+  letter-spacing: 0.035em;
+
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/* Líneas decorativas de ambos lados */
+.home-eyebrow::before,
+.home-eyebrow::after {
+  content: "";
+
+  position: static;
+  inset: auto;
+
+  width: clamp(42px, 7vw, 100px);
+  height: 5px;
+  flex: 0 1 100px;
+
+  border-radius: 999px;
+
+  background:
+    linear-gradient(
+      90deg,
+      var(--pink-main),
+      var(--cyan-main)
+    );
+
+  box-shadow: 0 5px 14px rgba(197, 0, 104, 0.12);
+}
+
+/*
+ * La línea izquierda invierte el degradado
+ * para que ambas apunten hacia el texto.
+ */
+.home-eyebrow::before {
+  background:
+    linear-gradient(
+      90deg,
+      var(--cyan-main),
+      var(--pink-main)
+    );
+}
+
+/* Títulos principales de cada página */
+.about-title,
+.services-title,
+.contact-title,
+.products-title {
+  width: min(100%, 920px);
+  max-width: 920px;
+
+  margin: 16px auto 18px;
+
+  color: var(--cyan-main);
+
+  font-size: clamp(1.5rem, 2.25vw, 2.05rem);
+  font-weight: 950;
+  line-height: 1.18;
+  letter-spacing: -0.025em;
+
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/* Títulos de secciones internas */
+.section-title,
+.offer-title {
+  width: min(100%, 880px);
+  max-width: 880px;
+
+  margin: 15px auto 14px;
+
+  font-size: clamp(1.38rem, 2vw, 1.85rem);
+  font-weight: 950;
+  line-height: 1.22;
+  letter-spacing: -0.02em;
+
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/*
+ * Textos introductorios alineados con la nueva composición.
+ */
+.about-text,
+.services-intro,
+.contact-intro,
+.products-intro,
+.section-description,
+.offer-description {
+  margin-inline: auto;
+  text-align: center;
+}
+
+/*
+ * Centra los encabezados de secciones que contienen
+ * home-eyebrow + título + descripción.
+ */
+.section-heading {
+  text-align: center;
+}
+
+/* =========================================================
+   PANTALLAS MEDIANAS
+   ========================================================= */
+
+@media (max-width: 1100px) {
+  .home-eyebrow {
+    gap: 15px;
+
+    font-size: clamp(1.7rem, 3.2vw, 2.3rem);
+  }
+
+  .home-eyebrow::before,
+  .home-eyebrow::after {
+    width: clamp(36px, 6vw, 78px);
+    height: 4px;
+  }
+
+  .about-title,
+  .services-title,
+  .contact-title,
+  .products-title {
+    font-size: clamp(1.42rem, 2.5vw, 1.9rem);
+  }
+
+  .section-title,
+  .offer-title {
+    font-size: clamp(1.32rem, 2.25vw, 1.72rem);
+  }
+}
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 920px) {
+  .home-eyebrow {
+    width: min(100%, 680px);
+    gap: 13px;
+
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    line-height: 1.14;
+  }
+
+  .home-eyebrow::before,
+  .home-eyebrow::after {
+    width: clamp(30px, 5vw, 60px);
+    height: 4px;
+  }
+
+  .about-title,
+  .services-title,
+  .contact-title,
+  .products-title {
+    margin-top: 14px;
+
+    font-size: clamp(1.3rem, 3.4vw, 1.68rem);
+    line-height: 1.24;
+  }
+
+  .section-title,
+  .offer-title {
+    margin-top: 13px;
+
+    font-size: clamp(1.22rem, 3vw, 1.52rem);
+    line-height: 1.28;
+  }
+}
+
+/* =========================================================
+   MÓVIL
+   ========================================================= */
+
+@media (max-width: 620px) {
+  .home-eyebrow {
+    width: 100%;
+    gap: 9px;
+
+    font-size: clamp(1.2rem, 6vw, 1.55rem);
+    line-height: 1.2;
+    letter-spacing: 0.025em;
+  }
+
+  .home-eyebrow::before,
+  .home-eyebrow::after {
+    width: 24px;
+    height: 3px;
+    flex-basis: 24px;
+  }
+
+  .about-title,
+  .services-title,
+  .contact-title,
+  .products-title {
+    margin: 12px auto 15px;
+
+    font-size: clamp(1.04rem, 4.7vw, 1.28rem);
+    line-height: 1.32;
+    letter-spacing: -0.01em;
+  }
+
+  .section-title,
+  .offer-title {
+    margin: 12px auto 13px;
+
+    font-size: clamp(1rem, 4.4vw, 1.2rem);
+    line-height: 1.34;
+  }
+
+  .about-text,
+  .services-intro,
+  .contact-intro,
+  .products-intro,
+  .section-description,
+  .offer-description {
+    text-align: center;
+  }
+}
+
+/* =========================================================
+   CELULARES PEQUEÑOS
+   ========================================================= */
+
+@media (max-width: 390px) {
+  .home-eyebrow {
+    gap: 7px;
+
+    font-size: 1.08rem;
+    letter-spacing: 0.02em;
+  }
+
+  .home-eyebrow::before,
+  .home-eyebrow::after {
+    width: 17px;
+    height: 3px;
+    flex-basis: 17px;
+  }
+
+  .about-title,
+  .services-title,
+  .contact-title,
+  .products-title {
+    font-size: 0.98rem;
+    line-height: 1.36;
+  }
+
+  .section-title,
+  .offer-title {
+    font-size: 0.93rem;
+    line-height: 1.38;
+  }
+}
+
+/* =========================================================
+   EYEBROWS SIEMPRE EN UNA SOLA LÍNEA
+   ========================================================= */
+
+.home-eyebrow {
+  width: min(100%, 900px);
+  max-width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
+
+  gap: clamp(8px, 1.4vw, 18px);
+  margin-inline: auto;
+
+  /*
+   * Evita que textos como "Oferta de temporada"
+   * se dividan en dos líneas.
+   */
+  white-space: nowrap;
+
+  /*
+   * Mantiene el eyebrow grande, pero permite que se
+   * adapte mejor al espacio disponible.
+   */
+  font-size: clamp(1.3rem, 2.15vw, 2rem);
+  line-height: 1.1;
+  letter-spacing: 0.035em;
+}
+
+/* Las líneas laterales se reducen antes que el texto */
+.home-eyebrow::before,
+.home-eyebrow::after {
+  flex: 1 1 72px;
+  width: auto;
+  min-width: 20px;
+  max-width: 94px;
+}
+
+/*
+ * Permite que el contenido de la oferta utilice
+ * correctamente el ancho de su columna.
+ */
+.offer-card > div {
+  min-width: 0;
+}
+
+.offer-card .home-eyebrow {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* TABLET */
+@media (max-width: 920px) {
+  .home-eyebrow {
+    gap: 10px;
+    font-size: clamp(1.05rem, 3.4vw, 1.55rem);
+    letter-spacing: 0.025em;
+  }
+
+  .home-eyebrow::before,
+  .home-eyebrow::after {
+    flex-basis: 42px;
+    min-width: 14px;
+    max-width: 54px;
+    height: 4px;
+  }
+}
+
+/* MÓVIL */
+@media (max-width: 620px) {
+  .home-eyebrow {
+    gap: 7px;
+    font-size: clamp(0.9rem, 4.3vw, 1.18rem);
+    line-height: 1.15;
+    letter-spacing: 0.02em;
+  }
+
+  .home-eyebrow::before,
+  .home-eyebrow::after {
+    flex-basis: 24px;
+    min-width: 10px;
+    max-width: 28px;
+    height: 3px;
+  }
+}
+
+/* CELULARES PEQUEÑOS */
+@media (max-width: 390px) {
+  .home-eyebrow {
+    gap: 5px;
+    font-size: 0.8rem;
+    letter-spacing: 0.012em;
+  }
+
+  .home-eyebrow::before,
+  .home-eyebrow::after {
+    flex-basis: 14px;
+    min-width: 7px;
+    max-width: 16px;
   }
 }
